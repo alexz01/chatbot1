@@ -5,6 +5,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { join } from 'node:path';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -23,6 +24,16 @@ const angularApp = new AngularNodeAppEngine();
  * });
  * ```
  */
+  const apiUrl = process.env['API_URL'] || 'http://localhost:4000';
+  console.log(`Proxying API requests to: ${apiUrl}`);
+  app.use('/api', createProxyMiddleware({ target: apiUrl,
+    changeOrigin: true,
+    on: {
+      proxyRes: (proxyRes, req, res) => {
+        // delete proxyRes.headers['Server'];
+      }
+    }
+  }));
 
 /**
  * Serve static files from /browser

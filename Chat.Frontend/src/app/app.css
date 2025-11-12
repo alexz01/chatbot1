@@ -1,0 +1,22 @@
+nav {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  vertical-align: middle;
+  align-items: center;
+
+  .app-nav,
+  .app-nav-right {
+    display: flex;
+    gap: 15px;
+    vertical-align: middle;
+    align-items: center;
+  }
+}
+
+footer {
+  margin-top: 20px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
