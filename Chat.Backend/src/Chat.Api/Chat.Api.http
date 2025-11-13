@@ -1,6 +1,41 @@
 @Chat.Api_HostAddress = http://localhost:5157
+###
+# @name CreateUserRequest
+POST {{Chat.Api_HostAddress}}/Users/Create
+Content-Type: application/json
 
-GET {{Chat.Api_HostAddress}}/weatherforecast/
+{
+    "firstName":"TestFirst",
+    "lastName":"TestLast",
+    "lastName":"TestLast",
+    "email":"Test@email.com"
+}
+
+###
+
+GET {{Chat.Api_HostAddress}}/Users/GetAll
 Accept: application/json
+
+###
+
+GET {{Chat.Api_HostAddress}}/Users/Get/{{CreateUserRequest.response.body}}
+Accept: application/json,text
+
+###
+
+PUT {{Chat.Api_HostAddress}}/Users/Update
+Content-Type: application/json
+
+{
+    "firstName":"TestFirst2",
+    "lastName":"TestLast",
+    "lastName":"TestLast",
+    "email":"Test@email.com"
+}
+
+###
+
+DELETE {{Chat.Api_HostAddress}}/Users/Delete/{{CreateUserRequest.response.body}}
+Accept: application/json,text
 
 ###
