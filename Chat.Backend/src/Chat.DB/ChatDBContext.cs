@@ -10,11 +10,7 @@ public class ChatDBContext(DbContextOptions<ChatDBContext> options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>(b =>
-        {
-            b.HasKey(u => u.Id);
-            b.Property(u => u.Email).IsRequired();
-        });
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ChatDBContext).Assembly);
     }
 }
 

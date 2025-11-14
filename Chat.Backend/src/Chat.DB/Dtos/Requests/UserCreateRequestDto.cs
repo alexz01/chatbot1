@@ -1,10 +1,8 @@
-namespace Chat.DB.Dtos;
+namespace Chat.DB.Dtos.Requests;
 
-public class UserDto
+public class UserCreateRequestDto
 {
-    public int? Id { get; set; }  // optional for create
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
 }
-

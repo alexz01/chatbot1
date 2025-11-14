@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Chat.DB.Entities;
-using Chat.DB.Dtos;
+using Chat.DB.Dtos.Responses;
 using Microsoft.Extensions.Logging;
+using Chat.DB.Dtos.Requests;
 
 namespace Chat.DB.Services;
 
@@ -13,9 +14,9 @@ public class UserService(
     private readonly ChatDBContext _db = db;
     private readonly ILogger<UserService> _logger = logger;
 
-    public async Task<List<UserDto>> GetAllAsync() =>
+    public async Task<List<UserResponseDto>> GetAllAsync() =>
         await _db.Users
-            .Select(u => new UserDto
+            .Select(u => new UserResponseDto
             {
                 Id = u.Id,
                 FirstName = u.FirstName,
@@ -23,10 +24,10 @@ public class UserService(
                 Email = u.Email
             }).ToListAsync();
 
-    public async Task<UserDto?> GetByIdAsync(int id) =>
+    public async Task<UserResponseDto?> GetByIdAsync(int id) =>
         await _db.Users
             .Where(u => u.Id == id)
-            .Select(u => new UserDto
+            .Select(u => new UserResponseDto
             {
                 Id = u.Id,
                 FirstName = u.FirstName,
@@ -34,13 +35,14 @@ public class UserService(
                 Email = u.Email
             }).FirstOrDefaultAsync();
 
-    public async Task<int> CreateAsync(UserDto model)
+    public async Task<int> CreateAsync(UserCreateRequestDto model)
     {
         var entity = new User
         {
             FirstName = model.FirstName,
             LastName = model.LastName,
-            Email = model.Email
+            Email = model.Email,
+            CreatedAt = DateTime.UtcNow,
         };
 
         _db.Users.Add(entity);
@@ -49,20 +51,20 @@ public class UserService(
         return entity.Id;
     }
 
-    public async Task<bool> UpdateAsync(UserDto model)
+    public async Task<bool> UpdateAsync(UserUpdateRequestDto dto)
     {
         try
         {
-            var entity = await _db.Users.SingleOrDefaultAsync(u => u.Id == model.Id!.Value);
+            var entity = await _db.Users.SingleOrDefaultAsync(u => u.Id == dto.Id);
 
             if (entity == null)
             {
                 return false;
             }
 
-            entity.FirstName = model.FirstName;
-            entity.LastName = model.LastName;
-            entity.Email = model.Email;
+            entity.FirstName = dto.FirstName ?? entity.FirstName;
+            entity.LastName = dto.LastName ?? entity.LastName;
+            entity.Email = dto.Email ?? entity.Email;
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
@@ -71,7 +73,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating user with ID {UserId}", model.Id);
+            _logger.LogError(ex, "Error updating user with ID {UserId}", dto.Id);
             return false;
         }
     }

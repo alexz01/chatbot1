@@ -1,4 +1,5 @@
-using Chat.DB.Dtos;
+using Chat.DB.Dtos.Requests;
+using Chat.DB.Dtos.Responses;
 using Chat.DB.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,25 +16,25 @@ public class UsersController(
     private readonly UserService _userService = userService;
 
     [HttpGet("")]
-    public async Task<IEnumerable<UserDto>> GetAll()
+    public async Task<IEnumerable<UserResponseDto>> GetAll()
     {
         return await _userService.GetAllAsync();
     }
 
     [HttpGet("{id:int}")]
-    public async Task<UserDto?> Get(int id)
+    public async Task<UserResponseDto?> Get(int id)
     {
         return await _userService.GetByIdAsync(id);
     }
 
     [HttpPost]
-    public async Task<int> Create([FromBody] UserDto user)
+    public async Task<int> Create([FromBody] UserCreateRequestDto user)
     {
         return await _userService.CreateAsync(user);
     }
 
     [HttpPut]
-    public async Task<bool> Update([FromBody] UserDto user)
+    public async Task<bool> Update([FromBody] UserUpdateRequestDto user)
     {
         return await _userService.UpdateAsync(user);
     }
