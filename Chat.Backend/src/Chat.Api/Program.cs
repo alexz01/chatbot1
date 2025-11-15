@@ -4,13 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// read environment: Development, Production, etc.
-var environment = builder.Environment.EnvironmentName;
-var conn = builder.Configuration.GetConnectionString("DefaultConnection");
-
 builder.Services.AddDbContext<ChatDBContext>(options =>
 {
-    if (environment == "Development")
+    var conn = builder.Configuration.GetConnectionString("Database");
+    if (builder.Environment.IsDevelopment())
     {
         options.UseSqlite(conn);
     }
@@ -31,11 +28,14 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ChatDBContext>();
+    db.Database.EnsureCreated();
 }
 
 app.UseHttpsRedirection();
