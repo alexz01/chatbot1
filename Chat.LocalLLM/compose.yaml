@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  llm:
+    build: .
+    ports:
+      - "5560:5560"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=0
+    volumes:
+      - ./models:/app/model
