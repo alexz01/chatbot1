@@ -1,0 +1,9 @@
+.git/
+.gitignore
+npm-debug.log
+yarn-error.log
+temp/
+*.log
+*.tmp
+
+src/Chat.DB/Data/

@@ -70,7 +70,20 @@ public class UsersController(
     [HttpPut]
     public async Task<ActionResult<bool>> Update([FromBody] UserUpdateRequestDto user)
     {
-        return await _userService.UpdateAsync(user);
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            return await _userService.UpdateAsync(user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating new user");
+            throw;
+        }
     }
 
     [HttpDelete("{id:int}")]

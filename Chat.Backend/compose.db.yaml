@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  chat-mysql:
+    image: mysql:8.0
+    container_name: chat-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: chatdb
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./src/Chat.DB/Data/mysql:/var/lib/mysql
+      - ./src/Chat.DB/Data/Backup:/backup
+    command: [
+      "--default-authentication-plugin=mysql_native_password"
+    ]

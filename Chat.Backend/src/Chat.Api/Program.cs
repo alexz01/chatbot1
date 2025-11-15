@@ -5,24 +5,19 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var conn = builder.Configuration.GetConnectionString("DatabaseConnection");
+
 builder.Services.AddDbContext<ChatDBContext>(options =>
 {
-    var conn = builder.Configuration.GetConnectionString("Database");
-    if (builder.Environment.IsDevelopment())
-    {
-        options.UseSqlite(conn);
-    }
-    else
-    {
-        options.UseMySql(conn, ServerVersion.AutoDetect(conn));
-    }
+    options.UseMySql(conn, ServerVersion.AutoDetect(conn));
 });
 
 // Add services to the container.
 builder.Services.AddScoped<UserService>();
 
 
-builder.Services.AddControllers()
+builder.Services.AddControllers();
+/*
     .ConfigureApiBehaviorOptions(options =>
     {
         options.InvalidModelStateResponseFactory = context =>
@@ -42,7 +37,7 @@ builder.Services.AddControllers()
             }
         };
     });
-
+*/
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -52,10 +47,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<ChatDBContext>();
-    db.Database.EnsureCreated();
 }
 
 app.UseHttpsRedirection();
