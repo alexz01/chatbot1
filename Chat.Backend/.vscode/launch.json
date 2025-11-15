@@ -8,7 +8,7 @@
             "name": "C#: Chat.Api [http]",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}\\Chat.Backend\\src\\Chat.Api\\Chat.Api.csproj",
+            "projectPath": "${workspaceFolder}\\src\\Chat.Api\\Chat.Api.csproj",
             "launchConfigurationId": "TargetFramework=;http"
         }
     ]

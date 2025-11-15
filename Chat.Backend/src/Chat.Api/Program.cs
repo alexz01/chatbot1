@@ -1,5 +1,6 @@
 using Chat.DB;
 using Chat.DB.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,8 +22,27 @@ builder.Services.AddDbContext<ChatDBContext>(options =>
 builder.Services.AddScoped<UserService>();
 
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var env = context.HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
+            if (env.IsDevelopment())
+            {
+                return new BadRequestObjectResult(context.ModelState);
+            }
+            else
+            {
+                var errors = context.ModelState
+                    .Where(x => x.Value.Errors.Count > 0)
+                    .Select(x => x.Value.Errors.First().ErrorMessage)
+                    .ToArray();
+                return new BadRequestObjectResult(new { message = "Invalid request", details = errors });
+            }
+        };
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
