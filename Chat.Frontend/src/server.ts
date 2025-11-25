@@ -24,16 +24,38 @@ const angularApp = new AngularNodeAppEngine();
  * });
  * ```
  */
-  const apiUrl = process.env['API_URL'] || 'http://localhost:4000';
-  console.log(`Proxying API requests to: ${apiUrl}`);
-  app.use('/api', createProxyMiddleware({ target: apiUrl,
+
+const tgiUrl = 'http://localhost:5560';
+console.log(`Proxying API requests to: ${tgiUrl}`);
+app.use(
+  '/tgi',
+  createProxyMiddleware({
+    target: tgiUrl,
     changeOrigin: true,
+    pathRewrite: { '^/tgi': '' },
     on: {
       proxyRes: (proxyRes, req, res) => {
         // delete proxyRes.headers['Server'];
-      }
-    }
-  }));
+      },
+    },
+  })
+);
+
+const apiUrl = process.env['API_URL'] || 'http://localhost:4000';
+console.log(`Proxying API requests to: ${apiUrl}`);
+app.use(
+  '/api',
+  createProxyMiddleware({
+    target: apiUrl,
+    changeOrigin: true,
+    pathRewrite: { '^/api': '' },
+    on: {
+      proxyRes: (proxyRes, req, res) => {
+        // delete proxyRes.headers['Server'];
+      },
+    },
+  })
+);
 
 /**
  * Serve static files from /browser
@@ -43,7 +65,7 @@ app.use(
     maxAge: '1y',
     index: false,
     redirect: false,
-  }),
+  })
 );
 
 /**
@@ -52,9 +74,7 @@ app.use(
 app.use((req, res, next) => {
   angularApp
     .handle(req)
-    .then((response) =>
-      response ? writeResponseToNodeResponse(response, res) : next(),
-    )
+    .then((response) => (response ? writeResponseToNodeResponse(response, res) : next()))
     .catch(next);
 });
 
