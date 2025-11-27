@@ -1,0 +1,18 @@
+services:
+  local-llm:
+    container_name: local-llm
+    image: ghcr.io/huggingface/text-generation-inference:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - HF_HOME=/.hf
+    ports:
+      - "5560:80"
+    volumes:
+      - .hf:/.hf
+    gpus: all
+    shm_size: 1g
+    command: >
+      --model-id $MODEL_ID
+

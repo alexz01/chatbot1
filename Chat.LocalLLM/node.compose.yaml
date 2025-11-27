@@ -1,0 +1,17 @@
+services:
+  local-llm:
+    build:
+      context: .
+      dockerfile: node.dockerfile
+    container_name: local-llm-transformer
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - HF_HOME=/.hf
+      - PORT=80
+      - NODE_ENV=development
+    ports:
+      - "5560:80"
+    volumes:
+      - .hf:/.hf

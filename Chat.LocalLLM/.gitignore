@@ -1,0 +1,6 @@
+.hf/*
+*.env
+
+node_modules/
+dist/
+build/
