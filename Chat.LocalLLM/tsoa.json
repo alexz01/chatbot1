@@ -1,15 +1,18 @@
 {
-    "entryFile": "src/server.ts",
-    "noImplicitAdditionalProperties": "throw-on-extras",
-    "controllerPathGlobs": [
-        "src/**/*controller.ts"
-    ],
-    "spec": {
-        "outputDirectory": "build",
-        "specVersion": 3
-    },
-    "routes": {
-        "routesDir": "build",
-        "iocModule": "src/lib/tsyringeTsoaIocContainer.ts"
-    }
+  "entryFile": "src/server.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "controllerPathGlobs": [
+    "src/**/*controller.ts"
+  ],
+  "spec": {
+    "outputDirectory": "build",
+    "specVersion": 3
+  },
+  "routes": {
+    "routesDir": "build",
+    "iocModule": "src/lib/tsyringeTsoaIocContainer.ts"
+  },
+  "compilerOptions": {
+    "strictNullChecks": true
+  }
 }

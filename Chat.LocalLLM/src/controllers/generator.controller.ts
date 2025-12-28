@@ -1,6 +1,7 @@
-import { TextGenerationOutput } from './../models/generation.model';
+
+import { TextGenerationConfigCommand, TextGenerationOutput } from '../types/generation';
 import { GeneratorService } from './../services/generator.service';
-import { Body, Controller, Get, Post, Route } from "tsoa";
+import { Body, Controller, Post, Route } from "tsoa";
 import { injectable } from "tsyringe";
 
 @injectable()
@@ -11,9 +12,9 @@ export class GeneratorController extends Controller {
     super();
   }
 
-  @Get("/")
-  public async getDefault(): Promise<TextGenerationOutput | TextGenerationOutput[]> {
-    return await this.generatorService.generateText("Hello, world!");
+  @Post("/hello-world")
+  public async getDefault(@Body() options: TextGenerationConfigCommand): Promise<TextGenerationOutput> {
+    return await this.generatorService.generateText("Hello, world!", options);
   }
 
   @Post("/")

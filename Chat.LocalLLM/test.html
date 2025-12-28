@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test transformers.js</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #modelType {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    #textInput,
+    #imageInput {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    #textOutput {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #e9e9e9;
+      border-radius: 4px;
+    }
+
+    #modelStatus {
+      margin-top: 10px;
+      font-style: italic;
+      color: #555;
+    }
+
+    .display-none {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <select name="modelType" id="modelType">
+      <option value="text-generation" selected>Text Generation</option>
+      <option value="object-detection">Object Detection</option>
+      <option value="text-to-speech">Text to Speech (WIP)</option>
+      <option value="speech-to-text">Speech to Text (WIP)</option>
+      <option value="text-to-image">Text to Image (Not supported)</option>
+    </select>
+    <form id="generateForm" novalidate>
+      <textarea id="textInput" type="text" placeholder="Put some text here"></textarea>
+      <input type="file" id="imageInput" accept="image/*" disabled />
+      <div id="imagePreview" class="display-none">
+        <img src="" alt="image preview" />
+      </div>
+      <button id="submitButton" type="submit" disabled>Generate!</button>
+    </form>
+    <div id="textOutput">Waiting for input...</div>
+    <p id="modelStatus">Loading model...</p>
+  </main>
+
+  <script type="module">
+    import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers";
+    env.allowLocalModels = false;
+
+    function progressCallback(progressInfo) {
+      switch (progressInfo.status) {
+        case "initiate":
+          console.log('Initiate:', progressInfo.name, progressInfo.file)
+          break;
+        case "download":
+          console.log('Download:', progressInfo.name, progressInfo.file)
+          break;
+        case "progress":
+          console.log('Progress:', progressInfo.name, progressInfo.file, Math.round(progressInfo.progress), '%')
+          break;
+        case "done":
+          console.log('Done:', progressInfo.name, progressInfo.file)
+          break;
+        case "ready":
+          console.log('Model is ready for use:', progressInfo.model, 'for task:', progressInfo.task);
+          break;
+      }
+    }
+
+    const pipeLineOptions = {
+      device: 'webgpu',
+      dtype: 'fp32',
+      progress_callback: progressCallback
+    };
+
+    const textModelLoader$ = pipeline('text-generation', 'Xenova/llama2.c-stories15M', pipeLineOptions);
+    const imageToTextModelLoader$ = pipeline('object-detection', 'Xenova/detr-resnet-50', pipeLineOptions);
+
+    const modelTypeEl = document.getElementById('modelType');
+    const textInputEl = document.getElementById('textInput');
+    const imageInputEl = document.getElementById('imageInput');
+    const imagePreviewEl = document.getElementById('imagePreview');
+
+    modelTypeEl.addEventListener('change', (event) => {
+      const selectedModel = event.target.value;
+
+      switch (selectedModel) {
+        case 'text-generation':
+          textInputEl.disabled = false;
+          imageInputEl.disabled = true;
+          textInputEl.placeholder = "Put some text here";
+          break;
+        case 'object-detection':
+          textInputEl.disabled = true;
+          imageInputEl.disabled = false;
+          break;
+        case 'text-to-speech':
+          textInputEl.disabled = false;
+          imageInputEl.disabled = true;
+          textInputEl.placeholder = "Describe the image you want to generate";
+          break;
+      }
+    });
+    imageInputEl.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          imagePreviewEl.innerHTML = `<img src="${e.target.result}" id="imagePreview" alt="Image Preview" style="max-width: 100%; height: auto;" />`;
+        }
+        reader.readAsDataURL(file);
+      } else {
+        imagePreviewEl.innerHTML = '';
+      }
+    });
+    const outputEl = document.getElementById('textOutput');
+    const statusEl = document.getElementById('modelStatus');
+    const buttonEl = document.getElementById('submitButton');
+    const formEl = document.getElementById('generateForm');
+
+    let textGeneratorModel = function () { console.warn("Text model not loaded yet."); }
+    let ObjectDetectionModel = function () { console.warn("Object Detection model not loaded yet."); }
+    let textToImageGeneratorModel = function () { console.warn("Text to Image model not loaded yet."); }
+
+    // Load the models
+    Promise.all([
+      textModelLoader$.then(model => { textGeneratorModel = model; }),
+      imageToTextModelLoader$.then(model => { ObjectDetectionModel = model; }),
+      // textToImageModelLoader$.then(model => { textToImageGeneratorModel = model; })
+    ]).then(() => {
+      statusEl.textContent = "All models loaded successfully!";
+      buttonEl.removeAttribute('disabled');
+    }).catch((error) => {
+      statusEl.textContent = "Error loading models: " + error.message;
+      console.error("Error loading models:", error);
+    });
+
+    async function generateOutput($event) {
+      $event.preventDefault();
+      outputEl.textContent = "Generating...";
+      statusEl.textContent = "Generating...";
+
+      const modelType = modelTypeEl.value;
+
+      /** @type {(input, options) => any} */
+      let modelFn;
+      let modelFnOptions = {};
+      let input;
+
+      switch (modelType) {
+        case 'text-generation':
+          modelFn = textGeneratorModel;
+          modelFnOptions = {
+            max_new_tokens: 50,
+            do_sample: true,
+            temperature: 0.7,
+          };
+          input = textInputEl.value;
+          break;
+        case 'object-detection':
+          modelFn = ObjectDetectionModel;
+          input = imageInputEl.files[0];
+          break;
+        case 'text-to-image':
+          modelFn = textToImageGeneratorModel;
+          input = textInputEl.value;
+          break;
+      }
+
+      try {
+        if (modelType.startsWith('text') && !textInputEl.value) {
+          outputEl.textContent = "Please enter some text to generate.";
+          return;
+        }
+        // const message = { role: "user", content: text };
+        // const chatInput = [message];
+        // const result = await generatorModel(chatInput, { max_new_tokens: 50 })
+
+        const result = await modelFn(input, modelFnOptions);
+        outputEl.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+        statusEl.textContent = "Generation completed.";
+        console.log("Generation result:", result);
+      }
+      catch (error) {
+        outputEl.textContent = "Error during generation: " + error.message;
+        console.error("Error during generation:", error);
+      };
+    }
+
+    formEl.addEventListener('submit', generateOutput);
+  </script>
+</body>
+
+</html>
